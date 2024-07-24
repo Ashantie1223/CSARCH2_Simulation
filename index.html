@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="script.js"></script>
+    <title>Document</title>
+    
+</head>
+<body>
+    <form id="main-form" onsubmit="return simulateCache()" method="get">
+        <table>
+            <tr>
+                <td><label>Block Size</label></td>
+                <td><input name="bs" type="text"></td>
+            </tr>
+            <tr>
+                <td><label>MM Memory Size</label></td>
+                <td><input name="mms" type="text"></td>
+                <td>
+                    <select name="mms-type" id="mms-type">
+                        <option value="block">block</option>
+                        <option value="word">word</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td><label>Cache Memory Size</label></td>
+                <td><input name="cms" type="text"></td>
+                <td>
+                    <select name="cms-type" id="cms-type">
+                        <option value="block">block</option>
+                        <option value="word">word</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td><label>Sequence</label></td>
+                <td><input name="seq" type="text"></td>
+                <td>
+                    <select name="seq-type" id="seq-type">
+                        <option value="block">block</option>
+                        <option value="word">word</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td><label>Cache Access Time</label></td>
+                <td><input name="cat" type="text"></td>
+            </tr>
+            <tr>
+                <td><label>Memory Access Time</label></td>
+                <td><input name="mat" type="text"></td>
+            </tr>
+        </table>
+        <input type="submit" name="submit" id="submit" value="Start Simulation">
+        <table>
+            <tr>
+                <td><label>Cache Hits</label></td>
+                <td><label id="res-cache-hits">###</label></td>
+            </tr>
+            <tr>
+                <td><label>Cache Miss</label></td>
+                <td><label id="res-cache-miss">###</label></td>
+            </tr>
+            <tr>
+                <td><label>Miss Penalty</label></td>
+                <td><label name="res-miss-pen">###</label></td>
+            </tr>
+            <tr>
+                <td><label>Average Memory Access Time</label></td>
+                <td><label name="res-ave-mat">###</label></td>
+            </tr>
+            <tr>
+                <td><label>Tota Memory Access Time</td>
+                <td><label name="res-total-mat">###</label></td>
+            </tr>
+            <tr>
+                <td><label>Cache Snapshot</label></td>
+            </tr>
+            <tr>
+                <td>
+                    <table id="cache">
+                        <tr>
+                            <th>Block</th>
+                            <th>Data</th>
+                        </tr>
+                        <tr>
+                            <td>0</td>
+                            <td>2</td>
+                        </tr>
+                        <tr>
+                            <td>1</td>
+                            <td>5</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>1</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>0</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </form>
+    <form id="out-to-file" onsubmit="return outputtofile()">
+        <table>
+            <tr>
+                <td><label>file name</label></td>
+                <td><input name="filename" type="text"></td>
+            </tr>
+            <tr>
+                <td><label>Output to file</label></td>
+                <td><button type="submit" name="submit">.txt</button></td>
+            </tr>
+        </table>
+    </form>
+</body>
+</html>
