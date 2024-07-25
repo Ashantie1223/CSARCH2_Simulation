@@ -1,4 +1,3 @@
-let hitIndex;
 /**
  * This function creates a cache array given a memory size in
  * block or word.
@@ -14,9 +13,30 @@ function createCache(cms, bs, type) {
         cms = cms/bs;
     }
     for(let i = 0; i < cms; i++) {
-        cache[i] = {age:0,block:undefined};
+        cache[i] = {age:0,block:undefined,word:undefined};
     }
     return cache;
+}
+
+/**
+ * This function translate the string sequence into an integer array.
+ * 
+ * @param {*} seq 
+ * @returns array of integer
+ */
+function translateSeq(seq) {
+    const array = [];
+    while(seq.length > 0) {
+        if(seq.includes(",")) {
+            index = seq.slice(0,seq.indexOf(","));
+            seq = seq.slice(seq.indexOf(",") + 1);
+            array.push(Number.parseInt(index));
+        } else {
+            array.push(Number.parseInt(seq));
+            seq = "";
+        }
+    }
+    return array;
 }
 
 /**
@@ -38,37 +58,49 @@ function maxIndex(cache) {
 
 /**
  * This function searches the cache and checks if it
- * contains a specified block.
+ * contains the specified block.
  * 
+ * @param {*} cache 
  * @param {*} block 
- * @returns index of the block if it exist and -1 if it does not
+ * @returns index of the cache block if it exist and -1 if it does not
  */
 function contains(cache,block) {
     for(let i = 0; i < cache.length; i++) {
-        if(cache[i].value == block) {
+        if(cache[i].block == block) {
             return i;
         }
     }
     return -1;
 }
 
-
-function updateAgeMiss(value, index, array) {
-    if(maxIndex(array) != index) {
-        value.age++;
-    } else {
-        value.age = 0;
-    }
-    return value;
+/**
+ * This function maps an address to a block in the main memory.
+ * 
+ * @param {*} address 
+ * @param {*} bs 
+ * @returns index of the block the address is mapped to.
+ */
+function mapAddressToBlock(address, bs) {
+    let index = Number.parseInt(address/bs);
+    return index;
 }
 
-function updateAgeHit(value, index, array) {
-    if(hitIndex != index && value.age < array[hitIndex].age) {
-         value.age++;
-    } else if(hitIndex == index) {
-        value.age = 0;
+function updateAgeMiss(cache, maxIndex) {
+    for(let i = 0; i < cache.length; i++) {
+        if(maxIndex != i) {
+            cache[i].age++;
+        }
     }
-    return value;
+    cache[maxIndex].age = 0;
+}
+
+function updateAgeHit(cache, hitIndex) {
+    for(let i = 0; i < cache.length; i++) {
+        if((hitIndex != i) && (cache[i].age < cache[hitIndex].age)) {
+            cache[i].age++;
+        }
+    }
+    cache[hitIndex].age = 0;
 }
 
 function simulateCache() {
@@ -86,7 +118,28 @@ function simulateCache() {
     let hit = 0;
     let miss = 0;
 
-    
+    flow = translateSeq(seq);
+
+    // Full Associative Mapping with (LRU)
+    for(let i = 0; i < flow.length; i++) {
+        let hitIndex = contains(cache,flow[i]);
+        console.log('hit' + hitIndex);
+        if(hitIndex != -1) {
+            hit++;
+            updateAgeHit(cache, hitIndex);
+        } else {
+            miss++
+            let max = maxIndex(cache);
+            updateAgeMiss(cache, max);
+            cache[max].block = flow[i];
+        }
+    }
+
+    document.getElementById('res-cache-hits').innerHTML = cache[0].block;
+    document.getElementById('res-cache-miss').innerHTML = cache[1].block;
+    document.getElementById('res-miss-pen').innerHTML = cache[2].block;
+    document.getElementById('res-ave-mat').innerHTML = cache[3].block;
+
 
     return false;
 }
