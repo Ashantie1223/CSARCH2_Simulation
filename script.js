@@ -60,7 +60,7 @@ function checkFull(cache) {
 
 function updateCache(cache,cacheSize,block,recentIndex) {
     if(cache.length < cacheSize) {
-        cache.push({block:block,word:undefined});
+        cache.push({block:block});
         return cache.length - 1;
     } else {
         cache[recentIndex].block = block;
@@ -69,15 +69,44 @@ function updateCache(cache,cacheSize,block,recentIndex) {
 }
 
 /**
- * This function maps an address to a block in the main memory.
+ * This function maps a block to an address in the main memory.
  * 
- * @param {*} address 
+ * @param {*} block 
  * @param {*} bs 
  * @returns index of the block the address is mapped to.
  */
-function mapAddressToBlock(address, bs) {
-    let index = Number.parseInt(address/bs);
-    return index;
+function mapBlockToAddress(block,bs) {
+    let address = Number.parseInt(block*bs);
+    return address; // Converts decimal number to binary
+}
+
+function generateCacheSS(cache,cacheSize,mms,mms_type,bs) {
+    let snapshot = "";
+    // Determine MM size by block
+    let mmSize;
+    if(mms_type == 'block') {
+        mmSize = Number.parseInt(mms*bs);
+    } else {
+        mmSize = Number.parseInt(mms);
+    }
+    const addressSize = Math.log2(mmSize);
+    const wordSize = Math.log2(Number.parseInt(bs));
+    const tagSize = addressSize - wordSize;
+
+    for(let i = 0; i < cacheSize; i++) {
+        let baseAddress = mapBlockToAddress(cache[i].block,bs);
+        let tag = baseAddress.toString(2).padStart(addressSize,'0').slice(0,tagSize);
+        
+        for(let j = 0; j < Number.parseInt(bs); j++) {
+            snapshot += "<tr>";
+            if(j == 0) {
+                snapshot += "<td rowspan =\"" + bs + "\">" + cache[i].block + "</td>";
+                snapshot += "<td rowspan =\"" + bs + "\">" + tag + "</td>";
+            }
+            snapshot += "<td>" + (baseAddress + j).toString(2).padStart(addressSize,'0') + "</td>" + "</tr>";
+        }
+    }
+    return snapshot + "</tbody>"
 }
 
 function simulateCache() {
@@ -129,9 +158,10 @@ function simulateCache() {
     
     document.getElementById('res-total-mat').innerHTML = 0;
 
-    // Update Cach Snapshot
-    let text = "<thead><tr><th>Valid bit</th><th>Tag</th><th>Data</th></tr></thead><tbody>";
-    
+    // Generate Cache Snapshot
+    let snapshot = "<thead><tr><th>Block</th><th>Tag</th><th>Address</th></tr></thead><tbody>";
+    snapshot += generateCacheSS(cache,cacheSize,mms,mms_type,bs);
+    document.getElementById('cache').innerHTML = snapshot;
 
     return false;
 }
