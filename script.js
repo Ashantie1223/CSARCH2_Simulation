@@ -1,74 +1,83 @@
-let hitIndex;
 /**
- * This function creates a cache array given a memory size in
- * block or word.
+ * This function translate the string sequence into an integer array.
  * 
- * @param {*} cms 
- * @param {*} bs 
- * @param {*} type 
- * @returns cache array
+ * @param {*} seq 
+ * @returns array of integer
  */
-function createCache(cms, bs, type) {
-    const cache = [];
-    if(type == 'word') {
-        cms = cms/bs;
-    }
-    for(let i = 0; i < cms; i++) {
-        cache[i] = {age:0,block:undefined};
-    }
-    return cache;
-}
-
-/**
- * This function searches the oldest untouched cache block in cache
- * and returns its index.
- * 
- * @param {*} cache 
- * @returns index with highest age value
- */
-function maxIndex(cache) {
-    let maxIndex = 0;
-    for(let i = 1; i < cache.length; i++) {
-        if(cache[maxIndex].age < cache[i].age) {
-            maxIndex = i;
+function translateSeq(seq, seq_type, bs) {
+    const array = [];
+    while(seq.length > 0) {
+        if(seq.includes(",")) {
+            index = seq.slice(0,seq.indexOf(","));
+            seq = seq.slice(seq.indexOf(",") + 1);
+            if(seq_type == 'word') {
+                index = index / bs;
+            }
+            array.push(Number.parseInt(index));
+        } else {
+            if(seq_type == 'word') {
+                seq = seq / bs;
+            }
+            array.push(Number.parseInt(seq));
+            seq = "";
         }
     }
-    return maxIndex;
+    return array;
 }
 
 /**
  * This function searches the cache and checks if it
- * contains a specified block.
+ * contains the specified block.
  * 
+ * @param {*} cache 
  * @param {*} block 
- * @returns index of the block if it exist and -1 if it does not
+ * @returns index of the cache block if it exist and -1 if it does not.
  */
 function contains(cache,block) {
     for(let i = 0; i < cache.length; i++) {
-        if(cache[i].value == block) {
+        if(cache[i].block == block) {
             return i;
         }
     }
     return -1;
 }
 
-
-function updateAgeMiss(value, index, array) {
-    if(maxIndex(array) != index) {
-        value.age++;
-    } else {
-        value.age = 0;
+/**
+ * This function checks if the cache is full. If not, the function
+ * will return the index of the next empty cache line.
+ * 
+ * @param {*} cache 
+ * @returns -1 if full and index of the next empty cache line if not.
+ */
+function checkFull(cache) {
+    for(let i = 0; i < cache.length; i++) {
+        if(cache[i].block == undefined) {
+            return i;
+        }
     }
-    return value;
+    return -1;
 }
 
-function updateAgeHit(value, index, array) {
-    if(hitIndex != index && value.age < array[hitIndex].age) {
-         value.age++;
-    } else if(hitIndex == index) {
-        value.age = 0;
+function updateCache(cache,cacheSize,block,recentIndex) {
+    if(cache.length < cacheSize) {
+        cache.push({block:block,word:undefined});
+        return cache.length - 1;
+    } else {
+        cache[recentIndex].block = block;
+        return recentIndex;
     }
-    return value;
+}
+
+/**
+ * This function maps an address to a block in the main memory.
+ * 
+ * @param {*} address 
+ * @param {*} bs 
+ * @returns index of the block the address is mapped to.
+ */
+function mapAddressToBlock(address, bs) {
+    let index = Number.parseInt(address/bs);
+    return index;
 }
 
 function simulateCache() {
@@ -82,10 +91,46 @@ function simulateCache() {
     const cat = document.forms['main-form']['cat'].value;
     const mat = document.forms['main-form']['mat'].value;
     
-    const cache = createCache(cms, bs, cms_type);
+    // Create cache array instance
+    const cache = [];
+
+    // Determine cache size by block
+    let cacheSize;
+    if(cms_type == 'word') {
+        cacheSize = Number.parseInt(cms/bs);
+    } else {
+        cacheSize = Number.parseInt(cms);
+    }
+
+    // Initiate Program Flow into array
+    const programFlow = translateSeq(seq, seq_type, bs);
+    
+    // Initialize variables
     let hit = 0;
     let miss = 0;
+    let recentIndex = 0;
 
+    // Main Algorithm: Full Associative Mapping with (MRU)
+    for(let i = 0; i < programFlow.length; i++) {
+        let hitIndex = contains(cache,programFlow[i]); // Determine if hit
+        if(hitIndex != -1) {
+            hit++;
+            recentIndex = hitIndex;
+        } else {
+            miss++;
+            recentIndex = updateCache(cache,cacheSize,programFlow[i],recentIndex);
+        }
+    }
+    
+    document.getElementById('res-cache-hits').innerHTML = hit
+    document.getElementById('res-cache-miss').innerHTML = miss;
+    document.getElementById('res-miss-pen').innerHTML = 0;
+    document.getElementById('res-ave-mat').innerHTML = 0;
+    
+    document.getElementById('res-total-mat').innerHTML = 0;
+
+    // Update Cach Snapshot
+    let text = "<thead><tr><th>Valid bit</th><th>Tag</th><th>Data</th></tr></thead><tbody>";
     
 
     return false;
