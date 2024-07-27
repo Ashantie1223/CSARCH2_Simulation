@@ -68,6 +68,38 @@ function updateCache(cache,cacheSize,block,recentIndex) {
     }
 }
 
+function computeTotalAT (cat,mat,hit,miss,bs) {
+    return hit * (bs * cat) + miss * (cat + (mat + cat) * bs);
+}
+
+function computeAverageAT(h, c, m) {
+    return h*c + (1-h)*m;
+}
+
+function computeMissPenalty(cat, mat, bs, act) {
+    const action = act.slice(act.indexOf('-') + 1);
+    const confirm = act.slice(0, act.indexOf('-'));
+    console.log("action: " + action + "\nconfirm: " + confirm);
+    switch(action) {
+        case 'load':
+            switch(confirm) {
+                case 'no':
+                    return cat + (bs * mat) + cat;
+                case 'yes':
+                    return cat + mat + cat;
+            }
+            break
+        case 'write':
+            switch(confirm) {
+                case 'no':
+                    return cat + mat;
+                case 'yes':
+                    return cat + (bs * mat) + cat + mat;
+            }
+            break;
+    }
+}
+
 /**
  * This function maps a block to an address in the main memory.
  * 
@@ -76,7 +108,7 @@ function updateCache(cache,cacheSize,block,recentIndex) {
  * @returns index of the block the address is mapped to.
  */
 function mapBlockToAddress(block,bs) {
-    let address = Number.parseInt(block*bs);
+    let address = block*bs;
     return address; // Converts decimal number to binary
 }
 
@@ -85,19 +117,19 @@ function generateCacheSS(cache,cacheSize,mms,mms_type,bs) {
     // Determine MM size by block
     let mmSize;
     if(mms_type == 'block') {
-        mmSize = Number.parseInt(mms*bs);
+        mmSize = mms*bs;
     } else {
-        mmSize = Number.parseInt(mms);
+        mmSize = mms;
     }
     const addressSize = Math.log2(mmSize);
-    const wordSize = Math.log2(Number.parseInt(bs));
+    const wordSize = Math.log2(bs);
     const tagSize = addressSize - wordSize;
 
     for(let i = 0; i < cacheSize; i++) {
         let baseAddress = mapBlockToAddress(cache[i].block,bs);
         let tag = baseAddress.toString(2).padStart(addressSize,'0').slice(0,tagSize);
         
-        for(let j = 0; j < Number.parseInt(bs); j++) {
+        for(let j = 0; j < bs; j++) {
             snapshot += "<tr>";
             if(j == 0) {
                 snapshot += "<td rowspan =\"" + bs + "\">" + cache[i].block + "</td>";
@@ -110,15 +142,16 @@ function generateCacheSS(cache,cacheSize,mms,mms_type,bs) {
 }
 
 function simulateCache() {
-    const bs = document.forms['main-form']['bs'].value;
-    const mms = document.forms['main-form']['mms'].value;
+    const bs = Number.parseInt(document.forms['main-form']['bs'].value);
+    const mms = Number.parseInt(document.forms['main-form']['mms'].value);
     const mms_type = document.forms['main-form']['mms-type'].value;
-    const cms = document.forms['main-form']['cms'].value;
+    const cms = Number.parseInt(document.forms['main-form']['cms'].value);
     const cms_type = document.forms['main-form']['cms-type'].value;
     const seq = document.forms['main-form']['seq'].value;
     const seq_type = document.forms['main-form']['seq-type'].value;
-    const cat = document.forms['main-form']['cat'].value;
-    const mat = document.forms['main-form']['mat'].value;
+    const cat = Number.parseInt(document.forms['main-form']['cat'].value);
+    const mat = Number.parseInt(document.forms['main-form']['mat'].value);
+    const act = document.forms['main-form']['load'].value;
     
     // Create cache array instance
     const cache = [];
@@ -126,9 +159,9 @@ function simulateCache() {
     // Determine cache size by block
     let cacheSize;
     if(cms_type == 'word') {
-        cacheSize = Number.parseInt(cms/bs);
+        cacheSize = cms/bs;
     } else {
-        cacheSize = Number.parseInt(cms);
+        cacheSize = cms;
     }
 
     // Initiate Program Flow into array
@@ -151,12 +184,16 @@ function simulateCache() {
         }
     }
     
+    // Computations
+    missPenalty = computeMissPenalty(cat,mat,bs,act);
+    averageAccessTime = computeAverageAT((hit/programFlow.length),cat,missPenalty);
+    totalAccessTime = computeTotalAT(cat,mat,hit,miss,bs);
+
     document.getElementById('res-cache-hits').innerHTML = hit
     document.getElementById('res-cache-miss').innerHTML = miss;
-    document.getElementById('res-miss-pen').innerHTML = 0;
-    document.getElementById('res-ave-mat').innerHTML = 0;
-    
-    document.getElementById('res-total-mat').innerHTML = 0;
+    document.getElementById('res-miss-pen').innerHTML = missPenalty + "ns";
+    document.getElementById('res-ave-mat').innerHTML = averageAccessTime.toFixed(2) + "ns";
+    document.getElementById('res-total-mat').innerHTML = totalAccessTime + "ns";
 
     // Generate Cache Snapshot
     let snapshot = "<thead><tr><th>Block</th><th>Tag</th><th>Address</th></tr></thead><tbody>";

@@ -46,11 +46,22 @@
             </tr>
             <tr>
                 <td><label>Cache Access Time</label></td>
-                <td><input name="cat" type="text"></td>
+                <td><input name="cat" type="text">ns</td>
             </tr>
             <tr>
                 <td><label>Memory Access Time</label></td>
-                <td><input name="mat" type="text"></td>
+                <td><input name="mat" type="text">ns</td>
+            </tr>
+            <tr>
+                <td><label>Cache Miss Memory Read/Write</label></td>
+                <td>
+                    <select name="load" id="load">
+                        <option value="no-load">no load-through</option>
+                        <option value="yes-load">load-through</option>
+                        <option value="no-write">no write-allocate</option>
+                        <option value="yes-write">write-allocate</option>
+                    </select>
+                </td>
             </tr>
         </table>
         <input type="submit" name="submit" id="submit" value="Start Simulation">
@@ -72,7 +83,7 @@
                 <td><label id="res-ave-mat">###</label></td>
             </tr>
             <tr>
-                <td><label>Tota Memory Access Time</td>
+                <td><label>Total Memory Access Time</td>
                 <td><label id="res-total-mat">###</label></td>
             </tr>
             <tr>
