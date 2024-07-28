@@ -4,110 +4,165 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="script.js"></script>
-    <title>Document</title>
-    
+    <title>FA/MRU Cache Simulator</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <form id="main-form" onsubmit="return simulateCache()" method="get">
-        <table>
-            <tr>
-                <td><label>Block Size</label></td>
-                <td><input name="bs" type="text"></td>
-            </tr>
-            <tr>
-                <td><label>MM Memory Size</label></td>
-                <td><input name="mms" type="text"></td>
-                <td>
-                    <select name="mms-type" id="mms-type">
-                        <option value="block">block</option>
-                        <option value="word">word</option>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <td><label>Cache Memory Size</label></td>
-                <td><input name="cms" type="text"></td>
-                <td>
-                    <select name="cms-type" id="cms-type">
-                        <option value="block">block</option>
-                        <option value="word">word</option>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <td><label>Sequence</label></td>
-                <td><input name="seq" type="text"></td>
-                <td>
-                    <select name="seq-type" id="seq-type">
-                        <option value="block">block</option>
-                        <option value="word">word</option>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <td><label>Cache Access Time</label></td>
-                <td><input name="cat" type="text">ns</td>
-            </tr>
-            <tr>
-                <td><label>Memory Access Time</label></td>
-                <td><input name="mat" type="text">ns</td>
-            </tr>
-            <tr>
-                <td><label>Cache Miss Memory Read/Write</label></td>
-                <td>
-                    <select name="load" id="load">
-                        <option value="no-load">no load-through</option>
-                        <option value="yes-load">load-through</option>
-                        <option value="no-write">no write-allocate</option>
-                        <option value="yes-write">write-allocate</option>
-                    </select>
-                </td>
-            </tr>
-        </table>
-        <input type="submit" name="submit" id="submit" value="Start Simulation">
-        <table>
-            <tr>
-                <td><label>Cache Hits</label></td>
-                <td><label id="res-cache-hits">###</label></td>
-            </tr>
-            <tr>
-                <td><label>Cache Miss</label></td>
-                <td><label id="res-cache-miss">###</label></td>
-            </tr>
-            <tr>
-                <td><label>Miss Penalty</label></td>
-                <td><label id="res-miss-pen">###</label></td>
-            </tr>
-            <tr>
-                <td><label>Average Memory Access Time</label></td>
-                <td><label id="res-ave-mat">###</label></td>
-            </tr>
-            <tr>
-                <td><label>Total Memory Access Time</td>
-                <td><label id="res-total-mat">###</label></td>
-            </tr>
-            <tr>
-                <td><label>Cache Snapshot</label></td>
-            </tr>
-            <tr>
-                <td>
-                    <table id="cache">
-                    </table>
-                </td>
-            </tr>
-        </table>
-    </form>
-    <form id="out-to-file" onsubmit="return outputtofile()">
-        <table>
-            <tr>
-                <td><label>file name</label></td>
-                <td><input name="filename" type="text"></td>
-            </tr>
-            <tr>
-                <td><label>Output to file</label></td>
-                <td><button type="submit" name="submit">.txt</button></td>
-            </tr>
-        </table>
-    </form>
+    <!-- Navigation Bar -->
+    <div class="nav-parent">
+        <div class="nav-label">
+            <h1>FA | MRU Cache Simulator</h1>
+        </div>
+        <div class="nav-toggle">
+            <h1>⋆☀︎.</h1>
+        </div>
+        <hr>
+    </div>
+
+    <!-- Main Body -->
+    <div class="main-parent">
+        <!-- Input Form Section -->
+        <section class="input-parent">
+            <form id="main-form" onsubmit="return simulateCache()" method="get">
+                <table>
+                    <tr>
+                        <td><label>Block Size</label></td>
+                        <td><input name="bs" type="text" required></td>
+                        <td>word</td>
+                    </tr>
+                    <tr>
+                        <td><label>MM Memory Size</label></td>
+                        <td><input name="mms" type="text" required></td>
+                        <td>
+                            <select name="mms-type" id="mms-type" required>
+                                <option value="block">block</option>
+                                <option value="word">word</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label>Cache Memory Size</label></td>
+                        <td><input name="cms" type="text" required></td>
+                        <td>
+                            <select name="cms-type" id="cms-type" required>
+                                <option value="block">block</option>
+                                <option value="word">word</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label>Sequence</label></td>
+                        <td><input name="seq" type="text" required></td>
+                        <td>
+                            <select name="seq-type" id="seq-type" required>
+                                <option value="block">block</option>
+                                <option value="word">word</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label>Cache Access Time</label></td>
+                        <td><input name="cat" type="text" required></td>
+                        <td>ns</td>
+                    </tr>
+                    <tr>
+                        <td><label>Memory Access Time</label></td>
+                        <td><input name="mat" type="text" required></td>
+                        <td>ns</td>
+                    </tr>
+                    <tr>
+                        <td><label>Cache Miss Memory Read/Write</label></td>
+                        <td colspan="2">
+                            <select name="cmm" id="cmm">
+                                <option value="no-load">no load-through</option>
+                                <option value="yes-load">load-through</option>
+                                <option value="no-write">no write-allocate</option>
+                                <option value="yes-write">write-allocate</option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                <p name="input-error" id="input-error"></p>
+                <input type="submit" name="submit" id="submit" value="Start Simulation">
+            </form>
+        </section>
+
+        <!-- Output Section -->
+        <section class="output-parent">
+            <table>
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                </tr>
+                <tr>
+                    <td>Cache Hits</td>
+                    <td><label id="res-cache-hits">###</label></td>
+                </tr>
+                <tr>
+                    <td>Cache Miss</td>
+                    <td><label id="res-cache-miss">###</label></td>
+                </tr>
+                <tr>
+                    <td>Hit Rate</td>
+                    <td><label id="res-hit-rate-percent">###</label></td>
+                </tr>
+                <tr>
+                    <td>Miss Rate</td>
+                    <td><label id="res-miss-rate-percent">###</label></td>
+                </tr>
+                <tr>
+                    <td>Miss Penalty</td>
+                    <td><label id="res-miss-pen">###</label></td>
+                </tr>
+                <tr>
+                    <td>Average Memory Access Time</td>
+                    <td><label id="res-ave-mat">###</label></td>
+                </tr>
+                <tr>
+                    <td>Total Memory Access Time</td>
+                    <td><label id="res-total-mat">###</label></td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>Cache Snapshot</strong></td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <table id="cache-all">
+                            <!-- Cache Snapshot Data -->
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>Final Cache State</strong></td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <table id="cache-final">
+                            <!-- Final Cache Data -->
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>Sequence Hit/Miss</strong></td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <table id="seq-hit-miss">
+                            <!-- Sequence Hit/Miss Data -->
+                        </table>
+                    </td>
+                </tr>
+            </table>
+            <form id="out-to-file" onsubmit="return outputToFile()">
+                <table>
+                    <tr>
+                        <td><label>File Name</label></td>
+                        <td><input name="filename" type="text" required></td>
+                        <td><button type="submit" name="submit">Save as .txt</button></td>
+                    </tr>
+                </table>
+            </form>
+        </section>
+    </div>
 </body>
 </html>
