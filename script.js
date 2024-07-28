@@ -1,204 +1,168 @@
-/**
- * This function translate the string sequence into an integer array.
- * 
- * @param {*} seq 
- * @returns array of integer
- */
-function translateSeq(seq, seq_type, bs) {
-    const array = [];
-    while(seq.length > 0) {
-        if(seq.includes(",")) {
-            index = seq.slice(0,seq.indexOf(","));
-            seq = seq.slice(seq.indexOf(",") + 1);
-            if(seq_type == 'word') {
-                index = index / bs;
-            }
-            array.push(Number.parseInt(index));
+document.addEventListener("DOMContentLoaded", () => {
+    const toggleButton = document.querySelector(".nav-toggle h1");
+
+    toggleButton.addEventListener("click", () => {
+        document.body.classList.toggle("dark-mode");
+        document.body.classList.toggle("light-mode");
+
+        if (document.body.classList.contains("dark-mode")) {
+            toggleButton.textContent = "࣪ ִֶָ☾.";
         } else {
-            if(seq_type == 'word') {
-                seq = seq / bs;
-            }
-            array.push(Number.parseInt(seq));
-            seq = "";
+            toggleButton.textContent = "⋆☀︎.";
         }
+    });
+
+    const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (prefersDarkScheme) {
+        document.body.classList.add("dark-mode");
+        toggleButton.textContent = "࣪ ִֶָ☾.";
+    } else {
+        document.body.classList.add("light-mode");
+        toggleButton.textContent = "⋆☀︎.";
     }
-    return array;
+});
+
+
+function translateSeq(seq, seq_type, bs) {
+    return seq.split(",").map(index => {
+        return seq_type === 'word' ? index / bs : Number.parseInt(index);
+    });
 }
 
-/**
- * This function searches the cache and checks if it
- * contains the specified block.
- * 
- * @param {*} cache 
- * @param {*} block 
- * @returns index of the cache block if it exist and -1 if it does not.
- */
-function contains(cache,block) {
-    for(let i = 0; i < cache.length; i++) {
-        if(cache[i].block == block) {
-            return i;
-        }
-    }
-    return -1;
+function contains(cache, block) {
+    return cache.findIndex(item => item.block === block);
 }
 
-/**
- * This function checks if the cache is full. If not, the function
- * will return the index of the next empty cache line.
- * 
- * @param {*} cache 
- * @returns -1 if full and index of the next empty cache line if not.
- */
 function checkFull(cache) {
-    for(let i = 0; i < cache.length; i++) {
-        if(cache[i].block == undefined) {
-            return i;
-        }
-    }
-    return -1;
+    return cache.findIndex(item => item.block === undefined);
 }
 
-function updateCache(cache,cacheSize,block,recentIndex) {
-    if(cache.length < cacheSize) {
-        cache.push({block:block});
+function updateCache(cache, cacheSize, block, index, recentIndex) {
+    if (cache.length < cacheSize) {
+        cache.push({ block: block, age: [index], data: [block] });
         return cache.length - 1;
     } else {
         cache[recentIndex].block = block;
+        cache[recentIndex].age.push(index);
+        cache[recentIndex].data.push(block);
         return recentIndex;
     }
 }
 
-function computeTotalAT (cat,mat,hit,miss,bs) {
-    return hit * (bs * cat) + miss * (cat + (mat + cat) * bs);
-}
-
-function computeAverageAT(h, c, m) {
-    return h*c + (1-h)*m;
-}
-
-function computeMissPenalty(cat, mat, bs, act) {
-    const action = act.slice(act.indexOf('-') + 1);
-    const confirm = act.slice(0, act.indexOf('-'));
-    console.log("action: " + action + "\nconfirm: " + confirm);
-    switch(action) {
-        case 'load':
-            switch(confirm) {
-                case 'no':
-                    return cat + (bs * mat) + cat;
-                case 'yes':
-                    return cat + mat + cat;
-            }
-            break
-        case 'write':
-            switch(confirm) {
-                case 'no':
-                    return cat + mat;
-                case 'yes':
-                    return cat + (bs * mat) + cat + mat;
-            }
-            break;
+function generateCacheSnapshotAll(cache) {
+    let snapshot = "<thead><tr><th>Block</th><th>Age</th><th>Data</th></tr></thead><tbody>";
+    for (let i = 0; i < cache.length; i++) {
+        snapshot += `<tr><td>${i}</td><td>${cache[i].age.join(', ')}</td><td>${cache[i].data.join(', ')}</td></tr>`;
     }
+    return snapshot + "</tbody>";
 }
 
-/**
- * This function maps a block to an address in the main memory.
- * 
- * @param {*} block 
- * @param {*} bs 
- * @returns index of the block the address is mapped to.
- */
-function mapBlockToAddress(block,bs) {
-    let address = block*bs;
-    return address; // Converts decimal number to binary
+function generateCacheSnapshotFinal(cache) {
+    let snapshot = "<thead><tr><th>Block</th><th>Data</th></tr></thead><tbody>";
+    for (let i = 0; i < cache.length; i++) {
+        snapshot += `<tr><td>${i}</td><td>${cache[i].data[cache[i].data.length - 1]}</td></tr>`;
+    }
+    return snapshot + "</tbody>";
 }
 
-function generateCacheSS(cache,cacheSize,mms,mms_type,bs) {
-    let snapshot = "";
-    // Determine MM size by block
-    let mmSize;
-    if(mms_type == 'block') {
-        mmSize = mms*bs;
-    } else {
-        mmSize = mms;
+function generateSeqHitMiss(seq, hitMiss) {
+    let snapshot = "<thead><tr><th>Sequence</th><th>Hit</th><th>Miss</th><th>Block</th></tr></thead><tbody>";
+    for (let i = 0; i < seq.length; i++) {
+        snapshot += `<tr><td>${seq[i]}</td><td>${hitMiss[i].hit ? '✔' : ''}</td><td>${hitMiss[i].miss ? '✘' : ''}</td><td>${hitMiss[i].block !== undefined ? hitMiss[i].block : ''}</td></tr>`;
     }
-    const addressSize = Math.log2(mmSize);
-    const wordSize = Math.log2(bs);
-    const tagSize = addressSize - wordSize;
-
-    for(let i = 0; i < cacheSize; i++) {
-        let baseAddress = mapBlockToAddress(cache[i].block,bs);
-        let tag = baseAddress.toString(2).padStart(addressSize,'0').slice(0,tagSize);
-        
-        for(let j = 0; j < bs; j++) {
-            snapshot += "<tr>";
-            if(j == 0) {
-                snapshot += "<td rowspan =\"" + bs + "\">" + cache[i].block + "</td>";
-                snapshot += "<td rowspan =\"" + bs + "\">" + tag + "</td>";
-            }
-            snapshot += "<td>" + (baseAddress + j).toString(2).padStart(addressSize,'0') + "</td>" + "</tr>";
-        }
-    }
-    return snapshot + "</tbody>"
+    return snapshot + "</tbody>";
 }
 
 function simulateCache() {
-    const bs = Number.parseInt(document.forms['main-form']['bs'].value);
-    const mms = Number.parseInt(document.forms['main-form']['mms'].value);
+    const bs = Number(document.forms['main-form']['bs'].value);
+    const mms = Number(document.forms['main-form']['mms'].value);
     const mms_type = document.forms['main-form']['mms-type'].value;
-    const cms = Number.parseInt(document.forms['main-form']['cms'].value);
+    const cms = Number(document.forms['main-form']['cms'].value);
     const cms_type = document.forms['main-form']['cms-type'].value;
     const seq = document.forms['main-form']['seq'].value;
     const seq_type = document.forms['main-form']['seq-type'].value;
-    const cat = Number.parseInt(document.forms['main-form']['cat'].value);
-    const mat = Number.parseInt(document.forms['main-form']['mat'].value);
-    const act = document.forms['main-form']['load'].value;
-    
-    // Create cache array instance
-    const cache = [];
+    const cat = Number(document.forms['main-form']['cat'].value);
+    const mat = Number(document.forms['main-form']['mat'].value);
 
-    // Determine cache size by block
+    const cache = [];
     let cacheSize;
-    if(cms_type == 'word') {
-        cacheSize = cms/bs;
+    if (cms_type === 'word') {
+        cacheSize = Math.floor(cms / bs);
     } else {
         cacheSize = cms;
     }
 
-    // Initiate Program Flow into array
     const programFlow = translateSeq(seq, seq_type, bs);
-    
-    // Initialize variables
     let hit = 0;
     let miss = 0;
     let recentIndex = 0;
 
-    // Main Algorithm: Full Associative Mapping with (MRU)
-    for(let i = 0; i < programFlow.length; i++) {
-        let hitIndex = contains(cache,programFlow[i]); // Determine if hit
-        if(hitIndex != -1) {
+    const hitMiss = [];
+
+    for (let i = 0; i < programFlow.length; i++) {
+        const hitIndex = contains(cache, programFlow[i]);
+        if (hitIndex !== -1) {
             hit++;
             recentIndex = hitIndex;
+            cache[hitIndex].age.push(i); 
+            hitMiss.push({ hit: true, miss: false, block: hitIndex });
         } else {
             miss++;
-            recentIndex = updateCache(cache,cacheSize,programFlow[i],recentIndex);
+            recentIndex = updateCache(cache, cacheSize, programFlow[i], i, recentIndex);
+            hitMiss.push({ hit: false, miss: true, block: recentIndex });
         }
     }
-    
-    // Computations
-    missPenalty = computeMissPenalty(cat,mat,bs,act);
-    averageAccessTime = computeAverageAT((hit/programFlow.length),cat,missPenalty);
-    totalAccessTime = computeTotalAT(cat,mat,hit,miss,bs);
 
-    document.getElementById('res-cache-hits').innerHTML = hit
-    document.getElementById('res-cache-miss').innerHTML = miss;
-    document.getElementById('res-miss-pen').innerHTML = missPenalty + "ns";
-    document.getElementById('res-ave-mat').innerHTML = averageAccessTime.toFixed(2) + "ns";
-    document.getElementById('res-total-mat').innerHTML = totalAccessTime + "ns";
+    const totalAccesses = hit + miss;
+    const missPenalty = cat + (mat * bs) + cat;
+    const aveMAT = (hit / totalAccesses) * cat + (miss / totalAccesses) * missPenalty;
+    const totalMAT = hit * bs * cat + miss * (cat + mat * bs + cat * bs);
+    const hitRateFrac = `${hit}/${totalAccesses}`;
+    const hitRatePercent = ((hit / totalAccesses) * 100).toFixed(2);
+    const missRateFrac = `${miss}/${totalAccesses}`;
+    const missRatePercent = ((miss / totalAccesses) * 100).toFixed(2);
 
-    // Generate Cache Snapshot
-    let snapshot = "<thead><tr><th>Block</th><th>Tag</th><th>Address</th></tr></thead><tbody>";
-    snapshot += generateCacheSS(cache,cacheSize,mms,mms_type,bs);
-    document.getElementById('cache').innerHTML = snapshot;
+    document.getElementById('res-cache-hits').innerHTML = hitRateFrac;
+    document.getElementById('res-cache-miss').innerHTML = missRateFrac;
+    document.getElementById('res-hit-rate-percent').innerHTML = hitRatePercent + '%';
+    document.getElementById('res-miss-rate-percent').innerHTML = missRatePercent + '%';
+    document.getElementById('res-miss-pen').innerHTML = missPenalty + ' ns';
+    document.getElementById('res-ave-mat').innerHTML = aveMAT + ' ns';
+    document.getElementById('res-total-mat').innerHTML = totalMAT + ' ns';
+
+    document.getElementById('cache-all').innerHTML = generateCacheSnapshotAll(cache);
+    document.getElementById('cache-final').innerHTML = generateCacheSnapshotFinal(cache);
+    document.getElementById('seq-hit-miss').innerHTML = generateSeqHitMiss(programFlow, hitMiss);
+
+    document.querySelector('.output-parent').classList.add('active');
 
     return false;
 }
+
+function outputToFile() {
+    const filename = document.forms['out-to-file']['filename'].value;
+
+    let content = `Cache Hits: ${document.getElementById('res-cache-hits').innerHTML}\n`;
+    content += `Cache Miss: ${document.getElementById('res-cache-miss').innerHTML}\n`;
+    content += `Hit Rate: ${document.getElementById('res-hit-rate-percent').innerHTML}\n`;
+    content += `Miss Rate: ${document.getElementById('res-miss-rate-percent').innerHTML}\n`;
+    content += `Miss Penalty: ${document.getElementById('res-miss-pen').innerHTML}\n`;
+    content += `Average Memory Access Time: ${document.getElementById('res-ave-mat').innerHTML}\n`;
+    content += `Total Memory Access Time: ${document.getElementById('res-total-mat').innerHTML}\n`;
+
+    const snapshotAll = document.getElementById('cache-all').innerHTML;
+    const snapshotFinal = document.getElementById('cache-final').innerHTML;
+    const seqHitMiss = document.getElementById('seq-hit-miss').innerHTML;
+    content += `Cache Snapshot All:\n${snapshotAll.replace(/<\/?[^>]+(>|$)/g, "")}`;
+    content += `Cache Snapshot Final:\n${snapshotFinal.replace(/<\/?[^>]+(>|$)/g, "")}`;
+    content += `Sequence Hit/Miss:\n${seqHitMiss.replace(/<\/?[^>]+(>|$)/g, "")}`;
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename}.txt`;
+    link.click();
+
+    return false;
+}
+

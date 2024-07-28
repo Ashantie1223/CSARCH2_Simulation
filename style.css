@@ -1,0 +1,332 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+::selection {
+    background-color: #c8b1e4;
+    color: #fff;
+}
+
+/* Toggle Modes */
+
+:root {
+    --background-color-light: #f2f2f2;
+    --text-color-light: #222222;
+    --background-color-dark: #222222;
+    --text-color-dark: #f2f2f2;
+    --box-shadow-light: 0 4px 2px -2px #dee4e7;
+    --box-shadow-dark: 0 4px 2px -2px #1f1f1f;
+    --hover-color: #c8b1e4;
+}
+
+body.light-mode {
+    background-color: var(--background-color-light);
+    color: var(--text-color-light);
+}
+
+body.dark-mode {
+    background-color: var(--background-color-dark);
+    color: var(--text-color-dark);
+}
+
+body.dark-mode .nav-parent {
+    background-color: var(--background-color-dark);
+    box-shadow: var(--box-shadow-dark);
+}
+
+body.dark-mode .nav-parent h1 {
+    color: var(--text-color-dark);
+}
+
+body.dark-mode .nav-toggle h1:hover {
+    color: var(--hover-color);
+}
+
+body.dark-mode .input-parent,
+body.dark-mode .output-parent {
+    background-color: #333;
+}
+
+body.dark-mode input[type="text"],
+body.dark-mode select,
+body.dark-mode button {
+    background-color: #444;
+    color: #f2f2f2;
+    border: 1px solid #555;
+}
+
+/* Navigation Bar */
+
+.nav-parent {
+    display: flex;
+    height: 75px;
+    width: 101%;
+    background-color: var(--background-color-light);
+    box-shadow: var(--box-shadow-light);
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+}
+
+.nav-parent h1 {
+    color: var(--text-color-light);
+    font-size: 16px;
+    font-style: italic;
+    padding-left: 10%;
+    transition: color 0.3s;
+}
+
+.nav-label {
+    display: flex;
+    width: 85%;
+    align-items: center;
+}
+
+.nav-toggle {
+    display: flex;
+    width: 15%;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-style: normal;
+}
+
+.nav-toggle h1:hover {
+    color: var(--hover-color);
+}
+
+/* Main Body */
+
+.main-parent {
+    margin-top: 75px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.input-parent {
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 20px;
+    background-color: #f7f7f7;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s;
+}
+
+.input-parent table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2%;
+}
+
+.input-parent td {
+    padding: 10px;
+    vertical-align: middle;
+}
+
+.input-parent label {
+    font-weight: bold;
+}
+
+.input-parent .unit {
+    font-size: 12px;
+}
+
+.input-parent input[type="text"],
+.input-parent select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.input-parent input[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--hover-color);
+    color: rgb(253, 253, 253);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.input-parent input[type="submit"]:hover {
+    background-color: #b096d1;
+}
+
+/* Output Section */
+
+.output-parent {
+    width: 100%;
+    max-width: 600px;
+    margin-top: 20px;
+    background-color: #f7f7f7;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: none; /* Hide initially */
+    transition: background-color 0.3s;
+}
+
+.output-parent.active {
+    display: block; 
+}
+
+.output-parent table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.output-parent th, .output-parent td {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    text-align: left;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.output-parent th {
+    background-color: #f8f8f8;
+}
+
+.output-parent span {
+    font-weight: bold;
+}
+
+#out-to-file {
+    margin-top: 20px;
+}
+
+#out-to-file input[type="text"] {
+    width: calc(100% - 50px);
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 5px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+#out-to-file button {
+    padding: 10px;
+    background-color: var(--hover-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+#out-to-file button:hover {
+    background-color: #b096d1;
+}
+
+/* Table Styles */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background-color: #e0e0e0;
+    color: #333;
+    padding: 10px;
+    text-align: left;
+    font-weight: bold;
+    border-bottom: 2px solid #ddd;
+}
+
+td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+td .table-label{
+    background-color: #c8b1e4;
+}
+
+/* Media Queries */
+
+@media (max-width: 768px) {
+    .nav-parent {
+        height: 60px;
+    }
+    
+    .input-parent,
+    .output-parent {
+        padding: 15px;
+        margin: 10px;
+        font-size: 10px;
+    }
+    
+    .input-parent td,
+    .output-parent th,
+    .output-parent td {
+        padding: 8px;
+    }
+    
+    .input-parent input[type="text"],
+    .input-parent select {
+        padding: 6px;
+        font-size: 10px;
+    }
+    
+    .input-parent input[type="submit"],
+    #out-to-file button {
+        padding: 8px;
+        font-size: 12px;
+    }
+    
+    #out-to-file input[type="text"] {
+        width: calc(100% - 40px);
+        padding: 6px;
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-parent {
+        height: 50px;
+    }
+    
+    .input-parent,
+    .output-parent {
+        padding: 10px;
+        margin: 5px;
+    }
+    
+    .input-parent td,
+    .output-parent th,
+    .output-parent td {
+        padding: 6px;
+    }
+    
+    .input-parent input[type="text"],
+    .input-parent select {
+        padding: 4px;
+    }
+    
+    .input-parent input[type="submit"],
+    #out-to-file button {
+        padding: 6px;
+    }
+    
+    #out-to-file input[type="text"] {
+        width: calc(100% - 35px);
+        padding: 4px;
+    }
+}
