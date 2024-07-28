@@ -28,7 +28,7 @@
                     <tr>
                         <td><label>Block Size</label></td>
                         <td><input name="bs" type="text" required></td>
-                        <td>blocks</td>
+                        <td>word</td>
                     </tr>
                     <tr>
                         <td><label>MM Memory Size</label></td>
@@ -73,7 +73,7 @@
                     <tr>
                         <td><label>Cache Miss Memory Read/Write</label></td>
                         <td colspan="2">
-                            <select name="load" id="load">
+                            <select name="cmm" id="cmm">
                                 <option value="no-load">no load-through</option>
                                 <option value="yes-load">load-through</option>
                                 <option value="no-write">no write-allocate</option>
@@ -82,6 +82,7 @@
                         </td>
                     </tr>
                 </table>
+                <p name="input-error" id="input-error"></p>
                 <input type="submit" name="submit" id="submit" value="Start Simulation">
             </form>
         </section>

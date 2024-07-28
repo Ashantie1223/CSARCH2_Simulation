@@ -22,10 +22,48 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+function checkInputs(bs,mms,mms_type,cms,cms_type,seq,seq_type,cat,mat) {
+    const blockSeq = translateSeq(seq);
+    const wordSeq = seq.split(",").map(index => {return Number.parseInt(index)});
+    // check for NaN inputs 
+    if(isNaN(bs)){return 'Error: Block Size input returns NaN';}
+    if(isNaN(mms)){return 'Error: MM Memory Size input returns NaN';}
+    if(isNaN(cms)){return 'Error: Cache Memory Size input returns NaN';}
+    for(let i = 0; i < blockSeq.length; i++) {
+        if(blockSeq[i] != blockSeq[i]) {return 'Error: Sequence elements input returns NaN'}
+    }
+    if(isNaN(cat)){return 'Error: Cache Access Time input returns NaN';}
+    if(isNaN(mat)){return 'Error: Memory Access Time input returns NaN';}
+
+    // check valid blocks in sequence
+    switch(mms_type + "-" + seq_type){
+        case "block-block":
+            if(Math.max.apply(null,blockSeq) > mms){return 'Error: Element/s in Sequence exceeds MM Memory Size'}
+            break;
+        case "block-word":
+            if(Math.max.apply(null,blockSeq) > mms*bs){return 'Error: Element/s in Sequence exceeds MM Memory Size'}
+            break;
+        case "word-word":
+            if(Math.max.apply(null,wordSeq) > mms){return 'Error: Element/s in sequence exceeds MM Memory Size'}
+            break;
+        case "word-block":
+            if(Math.max.apply(null,blockSeq) > mms/bs){return 'Error: Element/s in sequence exceeds MM Memory Size'}
+            break;
+    }
+    // check memory size
+    if(mms_type === 'word'){
+        if(mms % bs !== 0){return 'Error: MM Memory Size does not match Block Size'}
+    }
+    if(cms_type === 'word'){
+        if(cms % bs !== 0){return 'Error: Cache Memory Size does not match Block Size'}
+    }
+    return '';
+}
+
 
 function translateSeq(seq, seq_type, bs) {
     return seq.split(",").map(index => {
-        return seq_type === 'word' ? index / bs : Number.parseInt(index);
+        return seq_type === 'word' ? Math.floor(index / bs) : Number.parseInt(index);
     });
 }
 
@@ -47,6 +85,20 @@ function updateCache(cache, cacheSize, block, index, recentIndex) {
         cache[recentIndex].data.push(block);
         return recentIndex;
     }
+}
+
+function computeMissPenalty(cmm, cat, mat, bs) {
+    switch(cmm) {
+        case 'no-load':
+            return cat + (bs * mat) + cat;
+        case 'yes-load':
+            return cat + mat + cat;
+        case 'no-write':
+            return cat + mat;
+        case 'yes-write':
+            return cat + (bs * mat) + cat + mat;
+    }
+    
 }
 
 function generateCacheSnapshotAll(cache) {
@@ -83,59 +135,66 @@ function simulateCache() {
     const seq_type = document.forms['main-form']['seq-type'].value;
     const cat = Number(document.forms['main-form']['cat'].value);
     const mat = Number(document.forms['main-form']['mat'].value);
+    const cmm = document.forms['main-form']['cmm'].value;
 
-    const cache = [];
-    let cacheSize;
-    if (cms_type === 'word') {
-        cacheSize = Math.floor(cms / bs);
-    } else {
-        cacheSize = cms;
-    }
+    let error = checkInputs(bs,mms,mms_type,cms,cms_type,seq,seq_type,cat,mat);
+    document.getElementById('input-error').innerHTML = error;
 
-    const programFlow = translateSeq(seq, seq_type, bs);
-    let hit = 0;
-    let miss = 0;
-    let recentIndex = 0;
-
-    const hitMiss = [];
-
-    for (let i = 0; i < programFlow.length; i++) {
-        const hitIndex = contains(cache, programFlow[i]);
-        if (hitIndex !== -1) {
-            hit++;
-            recentIndex = hitIndex;
-            cache[hitIndex].age.push(i); 
-            hitMiss.push({ hit: true, miss: false, block: hitIndex });
+    if(!error.includes("Error")){
+        const cache = [];
+        let cacheSize;
+        if (cms_type === 'word') {
+            cacheSize = Math.floor(cms / bs);
         } else {
-            miss++;
-            recentIndex = updateCache(cache, cacheSize, programFlow[i], i, recentIndex);
-            hitMiss.push({ hit: false, miss: true, block: recentIndex });
+            cacheSize = cms;
         }
+
+        const programFlow = translateSeq(seq, seq_type, bs);
+        let hit = 0;
+        let miss = 0;
+        let recentIndex = 0;
+
+        const hitMiss = [];
+        
+        for (let i = 0; i < programFlow.length; i++) {
+            const hitIndex = contains(cache, programFlow[i]);
+            if (hitIndex !== -1) {
+                hit++;
+                recentIndex = hitIndex;
+                cache[hitIndex].age.push(i); 
+                hitMiss.push({ hit: true, miss: false, block: hitIndex });
+            } else {
+                miss++;
+                recentIndex = updateCache(cache, cacheSize, programFlow[i], i, recentIndex);
+                hitMiss.push({ hit: false, miss: true, block: recentIndex });
+            }
+        }
+
+        const totalAccesses = hit + miss;
+        const missPenalty = computeMissPenalty(cmm, cat, mat, bs);
+        const aveMAT = (hit / totalAccesses) * cat + (miss / totalAccesses) * missPenalty;
+        const totalMAT = hit * bs * cat + miss * (cat + mat * bs + cat * bs);
+        const hitRateFrac = `${hit}/${totalAccesses}`;
+        const hitRatePercent = ((hit / totalAccesses) * 100).toFixed(2);
+        const missRateFrac = `${miss}/${totalAccesses}`;
+        const missRatePercent = ((miss / totalAccesses) * 100).toFixed(2);
+
+        document.getElementById('res-cache-hits').innerHTML = hitRateFrac;
+        document.getElementById('res-cache-miss').innerHTML = missRateFrac;
+        document.getElementById('res-hit-rate-percent').innerHTML = hitRatePercent + '%';
+        document.getElementById('res-miss-rate-percent').innerHTML = missRatePercent + '%';
+        document.getElementById('res-miss-pen').innerHTML = missPenalty + ' ns';
+        document.getElementById('res-ave-mat').innerHTML = aveMAT + ' ns';
+        document.getElementById('res-total-mat').innerHTML = totalMAT + ' ns';
+
+        document.getElementById('cache-all').innerHTML = generateCacheSnapshotAll(cache);
+        document.getElementById('cache-final').innerHTML = generateCacheSnapshotFinal(cache);
+        document.getElementById('seq-hit-miss').innerHTML = generateSeqHitMiss(programFlow, hitMiss);
+
+        document.querySelector('.output-parent').classList.add('active');
+    } else {
+        document.querySelector('.output-parent').classList.remove('active');
     }
-
-    const totalAccesses = hit + miss;
-    const missPenalty = cat + (mat * bs) + cat;
-    const aveMAT = (hit / totalAccesses) * cat + (miss / totalAccesses) * missPenalty;
-    const totalMAT = hit * bs * cat + miss * (cat + mat * bs + cat * bs);
-    const hitRateFrac = `${hit}/${totalAccesses}`;
-    const hitRatePercent = ((hit / totalAccesses) * 100).toFixed(2);
-    const missRateFrac = `${miss}/${totalAccesses}`;
-    const missRatePercent = ((miss / totalAccesses) * 100).toFixed(2);
-
-    document.getElementById('res-cache-hits').innerHTML = hitRateFrac;
-    document.getElementById('res-cache-miss').innerHTML = missRateFrac;
-    document.getElementById('res-hit-rate-percent').innerHTML = hitRatePercent + '%';
-    document.getElementById('res-miss-rate-percent').innerHTML = missRatePercent + '%';
-    document.getElementById('res-miss-pen').innerHTML = missPenalty + ' ns';
-    document.getElementById('res-ave-mat').innerHTML = aveMAT + ' ns';
-    document.getElementById('res-total-mat').innerHTML = totalMAT + ' ns';
-
-    document.getElementById('cache-all').innerHTML = generateCacheSnapshotAll(cache);
-    document.getElementById('cache-final').innerHTML = generateCacheSnapshotFinal(cache);
-    document.getElementById('seq-hit-miss').innerHTML = generateSeqHitMiss(programFlow, hitMiss);
-
-    document.querySelector('.output-parent').classList.add('active');
-
     return false;
 }
 
@@ -153,9 +212,10 @@ function outputToFile() {
     const snapshotAll = document.getElementById('cache-all').innerHTML;
     const snapshotFinal = document.getElementById('cache-final').innerHTML;
     const seqHitMiss = document.getElementById('seq-hit-miss').innerHTML;
-    content += `Cache Snapshot All:\n${snapshotAll.replace(/<\/?[^>]+(>|$)/g, "")}`;
-    content += `Cache Snapshot Final:\n${snapshotFinal.replace(/<\/?[^>]+(>|$)/g, "")}`;
-    content += `Sequence Hit/Miss:\n${seqHitMiss.replace(/<\/?[^>]+(>|$)/g, "")}`;
+
+    content += `\nCache Snapshot All (CSV):\n${snapshotAll.replace(/<\/tr>/g, "\n").replace(/<\/t(h|d)><t(h|d)>/g, ",").replace(/, /g, "-").replace(/<\/?[^>]+(>|$)/g, "")}\n`;
+    content += `Cache Snapshot Final (CSV):\n${snapshotFinal.replace(/<\/tr>/g, "\n").replace(/<\/t(h|d)><t(h|d)>/g, ",").replace(/<\/?[^>]+(>|$)/g, "")}\n`;
+    content += `Sequence Hit/Miss (CSV):\n${seqHitMiss.replace(/<\/tr>/g, "\n").replace(/<\/t(h|d)><t(h|d)>/g, ",").replace(/<\/?[^>]+(>|$)/g, "")}\n`;
 
     const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
     const link = document.createElement("a");
@@ -165,4 +225,3 @@ function outputToFile() {
 
     return false;
 }
-

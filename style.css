@@ -167,6 +167,11 @@ body.dark-mode button {
     background-color: #b096d1;
 }
 
+.input-parent p{
+    text-align: center;
+    color: red;
+}
+
 /* Output Section */
 
 .output-parent {
