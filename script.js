@@ -1,10 +1,17 @@
+/**
+ * This script toggles between light and dark mode based on user preference
+ * and system color scheme. It also simulates cache memory operations based
+ * on user input and generates relevant outputs.
+ */
 document.addEventListener("DOMContentLoaded", () => {
-    const toggleButton = document.querySelector(".nav-toggle h1");
+    const toggleButton = document.querySelector(".nav-toggle h1"); // toggle button element
 
+    // Add click event listener to the toggle button to switch between dark and light mode
     toggleButton.addEventListener("click", () => {
         document.body.classList.toggle("dark-mode");
         document.body.classList.toggle("light-mode");
 
+        // Update the button text based on the current mode
         if (document.body.classList.contains("dark-mode")) {
             toggleButton.textContent = "࣪ ִֶָ☾.";
         } else {
@@ -12,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // Set initial mode based on user's preference
     const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
     if (prefersDarkScheme) {
         document.body.classList.add("dark-mode");
@@ -22,6 +30,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+/**
+ * Checks the validity of input values.
+ * @param {number} bs - Block size.
+ * @param {number} mms - Main memory size.
+ * @param {string} mms_type - Main memory size type (block/word).
+ * @param {number} cms - Cache memory size.
+ * @param {string} cms_type - Cache memory size type (block/word).
+ * @param {string} seq - Sequence of memory accesses.
+ * @param {string} seq_type - Sequence type (block/word).
+ * @param {number} cat - Cache access time.
+ * @param {number} mat - Memory access time.
+ * @returns {string} Error message if any input is invalid, otherwise an empty string.
+ */
 function checkInputs(bs,mms,mms_type,cms,cms_type,seq,seq_type,cat,mat) {
     const blockSeq = translateSeq(seq);
     const wordSeq = seq.split(",").map(index => {return Number.parseInt(index)});
@@ -61,20 +82,47 @@ function checkInputs(bs,mms,mms_type,cms,cms_type,seq,seq_type,cat,mat) {
 }
 
 
+/**
+ * Translates the sequence based on its type and block size.
+ * @param {string} seq - Sequence of memory accesses.
+ * @param {string} seq_type - Sequence type (block/word).
+ * @param {number} bs - Block size.
+ * @returns {number[]} Translated sequence.
+ */
 function translateSeq(seq, seq_type, bs) {
     return seq.split(",").map(index => {
         return seq_type === 'word' ? Math.floor(index / bs) : Number.parseInt(index);
     });
 }
 
+/**
+ * Checks if a cache contains a specific block.
+ * @param {Array} cache - Cache memory array.
+ * @param {number} block - Block to check.
+ * @returns {number} Index of the block if found, otherwise -1.
+ */
 function contains(cache, block) {
     return cache.findIndex(item => item.block === block);
 }
 
+/**
+ * Checks if the cache is full.
+ * @param {Array} cache - Cache memory array.
+ * @returns {number} Index of the first empty slot if found, otherwise -1.
+ */
 function checkFull(cache) {
     return cache.findIndex(item => item.block === undefined);
 }
 
+/**
+ * Updates the cache with a new block.
+ * @param {Array} cache - Cache memory array.
+ * @param {number} cacheSize - Cache size.
+ * @param {number} block - Block to add.
+ * @param {number} index - Current index in the sequence.
+ * @param {number} recentIndex - Most recently used cache index.
+ * @returns {number} Updated recent index.
+ */
 function updateCache(cache, cacheSize, block, index, recentIndex) {
     if (cache.length < cacheSize) {
         cache.push({ block: block, age: [index], data: [block] });
@@ -87,6 +135,14 @@ function updateCache(cache, cacheSize, block, index, recentIndex) {
     }
 }
 
+/**
+ * Computes the miss penalty based on the cache miss mode.
+ * @param {string} cmm - Cache miss mode (no-load, yes-load, no-write, yes-write).
+ * @param {number} cat - Cache access time.
+ * @param {number} mat - Memory access time.
+ * @param {number} bs - Block size.
+ * @returns {number} Miss penalty in nanoseconds.
+ */
 function computeMissPenalty(cmm, cat, mat, bs) {
     switch(cmm) {
         case 'no-load':
@@ -101,6 +157,11 @@ function computeMissPenalty(cmm, cat, mat, bs) {
     
 }
 
+/**
+ * Generates a snapshot of the entire cache.
+ * @param {Array} cache - Cache memory array.
+ * @returns {string} HTML table of the cache snapshot.
+ */
 function generateCacheSnapshotAll(cache) {
     let snapshot = "<thead><tr><th>Block</th><th>Age</th><th>Data</th></tr></thead><tbody>";
     for (let i = 0; i < cache.length; i++) {
@@ -109,6 +170,11 @@ function generateCacheSnapshotAll(cache) {
     return snapshot + "</tbody>";
 }
 
+/**
+ * Generates a snapshot of the final state of the cache.
+ * @param {Array} cache - Cache memory array.
+ * @returns {string} HTML table of the final cache snapshot.
+ */
 function generateCacheSnapshotFinal(cache) {
     let snapshot = "<thead><tr><th>Block</th><th>Data</th></tr></thead><tbody>";
     for (let i = 0; i < cache.length; i++) {
@@ -117,6 +183,12 @@ function generateCacheSnapshotFinal(cache) {
     return snapshot + "</tbody>";
 }
 
+/**
+ * Generates a table of hits and misses for each memory access in the sequence.
+ * @param {Array} seq - Sequence of memory accesses.
+ * @param {Array} hitMiss - Array of hit/miss objects.
+ * @returns {string} HTML table of sequence hit/miss data.
+ */
 function generateSeqHitMiss(seq, hitMiss) {
     let snapshot = "<thead><tr><th>Sequence</th><th>Hit</th><th>Miss</th><th>Block</th></tr></thead><tbody>";
     for (let i = 0; i < seq.length; i++) {
@@ -125,6 +197,10 @@ function generateSeqHitMiss(seq, hitMiss) {
     return snapshot + "</tbody>";
 }
 
+/**
+ * Simulates the cache memory based on user input and generates relevant outputs.
+ * @returns {boolean} Always returns false to prevent form submission of there is an error.
+ */
 function simulateCache() {
     const bs = Number(document.forms['main-form']['bs'].value);
     const mms = Number(document.forms['main-form']['mms'].value);
@@ -156,6 +232,7 @@ function simulateCache() {
 
         const hitMiss = [];
         
+        // Simulate cache operations
         for (let i = 0; i < programFlow.length; i++) {
             const hitIndex = contains(cache, programFlow[i]);
             if (hitIndex !== -1) {
@@ -179,6 +256,7 @@ function simulateCache() {
         const missRateFrac = `${miss}/${totalAccesses}`;
         const missRatePercent = ((miss / totalAccesses) * 100).toFixed(2);
 
+        // Display results
         document.getElementById('res-cache-hits').innerHTML = hitRateFrac;
         document.getElementById('res-cache-miss').innerHTML = missRateFrac;
         document.getElementById('res-hit-rate-percent').innerHTML = hitRatePercent + '%';
@@ -187,6 +265,7 @@ function simulateCache() {
         document.getElementById('res-ave-mat').innerHTML = aveMAT + ' ns';
         document.getElementById('res-total-mat').innerHTML = totalMAT + ' ns';
 
+        // Display cache snapshots and hit/miss sequence
         document.getElementById('cache-all').innerHTML = generateCacheSnapshotAll(cache);
         document.getElementById('cache-final').innerHTML = generateCacheSnapshotFinal(cache);
         document.getElementById('seq-hit-miss').innerHTML = generateSeqHitMiss(programFlow, hitMiss);
@@ -198,6 +277,10 @@ function simulateCache() {
     return false;
 }
 
+/**
+ * Outputs the simulation results to a file.
+ * @returns {boolean} - False to prevent form submission.
+ */
 function outputToFile() {
     const filename = document.forms['out-to-file']['filename'].value;
 
