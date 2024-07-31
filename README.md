@@ -15,6 +15,8 @@ Cache Miss Memory Read/Write - No Load Through, Load Through, No Write-Allocatio
 # Outputs
 (CH) Cache Hits        - # successful hits  
 (CM) Cache Miss        - # unsuccessful hits  
+(HR) Hit Rate          - % of successful hits
+(MR) Miss Rate         - % of unsuccessful hits
 (MP) Miss Penalty      - CAT + (MAT * BS) + CAT  
 (AVE-MAT) Average MAT  - (CH / (CH + CM)) * CAT + (CM / (CH + CM)) * MP  
 (TOT-MAT) Total MAT    - CH * BS * CAT + CM * (CAT + MAT * BS  + CAT * BS)  
