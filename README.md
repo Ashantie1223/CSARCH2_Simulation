@@ -10,6 +10,7 @@ with the use of Most Recently Used (MRU) replacement algorithm.
 (SEQ) Program Flow        - Sequence of blocks or words to be accessed in the MM  
 (CAT) Cache access time   - # time taken in accessing the cache  
 (MAT) Memory access time  - # time taken in accessing the memory  
+Cache Miss Memory Read/Write - No Load Through, Load Through, No Write-Allocation, Write Allocation  
 
 # Outputs
 (CH) Cache Hits        - # successful hits  
